@@ -1,9 +1,11 @@
 package holidays.holidays.core.entities;
 
-import org.hibernate.annotations.GenericGenerator;
+import java.util.Date;
+
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,29 +15,30 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "festivo")
-public class Festivo {
+public class Festivo  {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "sequence_holiday")
-    @GenericGenerator(name = "sequence_holiday", strategy = "increment")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private int id;
 
     @Column(name = "nombre", length = 100, unique = true)
     private String nombre;
 
-    @Column(name = "dia")
+    @Column(name = "dia", nullable = false)
     private int dia;
 
-    @Column(name = "mes")
+    @Column(name = "mes", nullable = false)
     private int mes;
 
-    @Column(name = "diasPascua")
+    @Column(name = "diaspascua", nullable = false)
     private int diasPascua;
-
-    @ManyToOne
-    @JoinColumn(name = "idtipo", referencedColumnName = "id")
+    
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "idtipo", nullable = false)
     private Tipo tipo;
+    
+    private Date fecha;
 
     public Festivo() {
     }
@@ -97,5 +100,11 @@ public class Festivo {
         this.tipo = tipo;
     }
 
+    public Date getFecha() {
+        return fecha;
+    }
     
+    public void setFecha(Date fecha) {
+        this.fecha = fecha;
+    }
 }
