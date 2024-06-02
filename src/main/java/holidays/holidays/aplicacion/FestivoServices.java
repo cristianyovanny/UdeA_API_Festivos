@@ -42,7 +42,15 @@ public class FestivoServices implements IFestivoServices{
         }
 
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        calendar.set(dia, mes - 1, año);
+        calendar.set(año, mes - 1, dia);
+        return calendar.getTime();
+    }
+    private Date nextLunes(Date fecha) {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        calendar.setTime(fecha);
+        while(calendar.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
+            calendar.add(Calendar.DATE, 1);
+        }
         return calendar.getTime();
     }
 
@@ -53,40 +61,28 @@ public class FestivoServices implements IFestivoServices{
         return calendar.getTime();
     }  
 
-    private Date nextLunes(Date fecha) {
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        calendar.setTime(fecha);
-        int diaDeLaSemana = calendar.get(Calendar.DAY_OF_WEEK);
-        if (diaDeLaSemana == Calendar.MONDAY) {
-            calendar.add(Calendar.DATE, 7);
-        } else {
-            int daySiguienteLunes = (Calendar.MONDAY - diaDeLaSemana + 7) % 7;
-            calendar.add(Calendar.DATE, daySiguienteLunes);
-        }
-        return calendar.getTime();
-    }
+    
     
     private List<Festivo> calculateFestivos(List<Festivo> festivos, int año){
         if (festivos != null) {
             Date pascua = getDomingoPascua(año);
             int i = 0;
             for(Festivo festivo : festivos) {
-                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                switch (festivo.getTipo().getId()) {
-                    case 1:
-                        calendar.set(año, festivo.getMes()-1, festivo.getDia());
-                        festivo.setFecha(calendar.getTime());
-                        break;
-                    case 2:
-                        calendar.set(año, festivo.getMes()-1, festivo.getDia());
-                        festivo.setFecha(nextLunes(calendar.getTime()));
-                        break;
-                    case 3:
-                        festivo.setFecha(addDias(pascua, festivo.getDiasPascua()));
-                        break;
-                    case 4:
-                        festivo.setFecha(nextLunes(addDias(pascua, festivo.getDiasPascua())));
-                        break;
+                if(festivo.getTipo().getId() == 1) {
+                    Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                    calendar.set(año, festivo.getMes()-1, festivo.getDia());
+                    festivo.setFecha(calendar.getTime());
+                }
+                else if (festivo.getTipo().getId() == 2) {
+                    Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                    calendar.set(año, festivo.getMes()-1, festivo.getDia());
+                    festivo.setFecha(nextLunes(calendar.getTime()));
+                }
+                else if (festivo.getTipo().getId() == 3) {
+                    festivo.setFecha(addDias(pascua, festivo.getDiasPascua()));
+                }
+                else if (festivo.getTipo().getId() == 4) {
+                    festivo.setFecha(nextLunes(addDias(pascua, festivo.getDiasPascua())));
                 }
                 festivos.set(i, festivo);
                 i++;
@@ -120,21 +116,11 @@ public class FestivoServices implements IFestivoServices{
     }
 
     @Override
-    public List<FestivoDto> obtenerFestivos(int año) {
-        List<Festivo> calculateFestivos = calculateFestivos(repositories.findAll(), año);
-        List<FestivoDto> fechas = new ArrayList<FestivoDto>();
-        for (Festivo festivo : calculateFestivos) {
-            fechas.add(new FestivoDto(festivo.getNombre(), festivo.getFecha()));
-        }
-        return fechas;
-    }
-
-    @Override
     public boolean diaFestivo(Date Fecha) {
         List<Festivo> festivos = repositories.findAll();
         return validateDiaFestivo(festivos, Fecha);
     }
-
+    
 
     @Override
     public boolean dateValida(String verificarFecha) {
@@ -147,5 +133,16 @@ public class FestivoServices implements IFestivoServices{
             return false;
         }
     }
-    
+
+    @Override
+    public List<FestivoDto> obtenerFestivos(int año) {
+        List<Festivo> calculateFestivos = calculateFestivos(repositories.findAll(), año);
+        List<FestivoDto> fechas = new ArrayList<FestivoDto>();
+        for (Festivo festivo : calculateFestivos) {
+            fechas.add(new FestivoDto(festivo.getNombre(), festivo.getFecha()));
+        }
+        return fechas;
+    }
+
+
 }
